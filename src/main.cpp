@@ -1,15 +1,6 @@
 #include "main.h"
 
-/**
- * Runs initialization code. This occurs as soon as the program is started.
- *
- * All other competition modes are blocked by initialize; it is recommended
- * to keep execution time for this mode under a few seconds.
- */
-void initialize()
-{
-    pros::lcd::initialize();
-}
+using namespace pros;
 
 /**
  * Runs while the robot is in the disabled state of Field Management System or
@@ -17,19 +8,6 @@ void initialize()
  * the robot is enabled, this task will exit.
  */
 void disabled()
-{
-}
-
-/**
- * Runs after initialize(), and before autonomous when connected to the Field
- * Management System or the VEX Competition Switch. This is intended for
- * competition-specific initialization routines, such as an autonomous selector
- * on the LCD.
- *
- * This task will exit when the robot is enabled and autonomous or opcontrol
- * starts.
- */
-void competition_initialize()
 {
 }
 
@@ -61,10 +39,44 @@ void autonomous()
  * operator control task will be stopped. Re-enabling the robot will restart the
  * task, not resume it from where it left off.
  */
+
+int power;
+int turn;
+int strafe;
+
+int front_l_speed;
+int front_r_speed;
+int back_l_speed;
+int back_r_speed;
+
 void opcontrol()
 {
+    /* Make motors and controller available in this function */
+    Controller master(E_CONTROLLER_MASTER);
+    Motor front_l(12);
+    Motor back_l(17);
+    Motor front_r(14);
+    Motor back_r(18);
+
+    // Begin loop --------------------------------------------------------------
     while (true)
     {
-        pros::delay(20);
+        power = master.get_analog(E_CONTROLLER_ANALOG_LEFT_Y);
+        strafe = master.get_analog(E_CONTROLLER_ANALOG_LEFT_X);
+        turn = master.get_analog(E_CONTROLLER_ANALOG_RIGHT_X);
+
+        /* Equations for X-Drive */
+        front_l_speed = power + turn + strafe;
+        front_r_speed = power - turn - strafe;
+        back_l_speed = power + turn - strafe;
+        back_r_speed = power - turn + strafe;
+
+        /* Set the motor velocities */
+        front_l.move_velocity(front_l_speed);
+        front_r.move_velocity(front_r_speed);
+        back_l.move_velocity(back_l_speed);
+        back_r.move_velocity(back_r_speed);
+
+        delay(20);
     }
 }
